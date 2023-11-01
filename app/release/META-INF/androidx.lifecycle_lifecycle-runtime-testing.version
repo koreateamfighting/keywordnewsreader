@@ -1,0 +1,1 @@
+task ':lifecycle:lifecycle-runtime-testing:writeVersionFile' property 'version'

@@ -1,0 +1,30 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Base.Theme.KeyWordNewsReader" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Customize your light theme here. -->
+        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+    </style>
+
+    <style name="Theme.KeyWordNewsReader" parent="Base.Theme.KeyWordNewsReader" />
+    <style name="AlertDialogCustom" parent="@style/MaterialAlertDialog.Material3">
+        <item name="backgroundColor">@drawable/shape</item>
+
+    </style>
+    <style name="ThemeOverlay.MaterialComponents.MaterialAlertDialog_Background" parent="@style/ThemeOverlay.MaterialComponents.MaterialAlertDialog">
+        <!-- Background Color-->
+        <item name="android:background">@drawable/webview_background</item>
+        <item name="colorOnSurface">@color/black</item>
+        <!-- Style for positive button -->
+        <item name="buttonBarPositiveButtonStyle">@style/PositiveButtonStyle</item>
+        <!-- Style for negative button -->
+        <item name="buttonBarNegativeButtonStyle">@color/black</item>
+    </style>
+
+    <style name="PositiveButtonStyle" parent="@style/Widget.MaterialComponents.Button">
+        <!-- text color for the button -->
+        <item name="android:textColor">@color/black</item>
+        <!-- Background tint for the button -->
+        <item name="backgroundTint">@color/black</item>
+
+    </style>
+</resources>

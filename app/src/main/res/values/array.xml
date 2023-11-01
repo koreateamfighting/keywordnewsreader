@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string-array name="newsCompany">
+        <item>연합뉴스</item>
+        <item>조선일보</item>
+        <item>중앙일보</item>
+        <item>동아일보</item>
+    </string-array>
+
+</resources>
