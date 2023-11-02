@@ -24,6 +24,7 @@ class MainActivity : AppCompatActivity() {
 
     val binding by lazy { ActivityMainBinding.inflate(layoutInflater) }
     private var microphoneImage: ImageView? = null
+
     var selecetedCompany : String? = null
 
     private val REQUEST_CODE_SPEECH_INPUT = 1
@@ -36,11 +37,14 @@ class MainActivity : AppCompatActivity() {
             getSupportActionBar()!!.hide();
         }//가로 모드일 때 타이틀 바 가지기 용도
         microphoneImage = findViewById<ImageView>(R.id.microphoneImage)  //이미지 뷰 변수 생성
+
         microphoneImage!!.setOnClickListener {
             getRecognizerIntent()
         }
+
         val trendNews_btn = findViewById<Button>(R.id.trendNews_btn)
         val spinner = findViewById<Spinner>(R.id.spinner)
+        spinner.setSelection(0)
         spinner.adapter = ArrayAdapter.createFromResource(this,R.array.newsCompany, android.R.layout.simple_list_item_1)
         spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener{
             override fun onNothingSelected(p0: AdapterView<*>?) {
@@ -50,15 +54,19 @@ class MainActivity : AppCompatActivity() {
                 when(p2){
                     0->{
                         selecetedCompany = spinner.selectedItem.toString()
+
                     }
                     1->{
                         selecetedCompany = spinner.selectedItem.toString()
+
                     }
                     2->{
                         selecetedCompany = spinner.selectedItem.toString()
+
                     }
                     3->{
                         selecetedCompany = spinner.selectedItem.toString()
+
                     }
                     else->{
                         selecetedCompany = null

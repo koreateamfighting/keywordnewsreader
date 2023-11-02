@@ -7,10 +7,12 @@ import android.os.Bundle
 import android.os.Handler
 import android.speech.tts.TextToSpeech
 import android.util.Log
+import android.view.WindowManager
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Button
 import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.ListView
 import android.widget.ScrollView
 import android.widget.TextView
@@ -35,6 +37,7 @@ class KeywordResultActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     private var scrollView: ScrollView? = null
     private val params = Bundle()
     private var playState : String = "stop"
+
     var textResult: String = ""
     val articleTitleList: MutableList<String> = ArrayList() // 기사 제목 리스트
     val articleUrlList: MutableList<String> = ArrayList() // 기사 링크 리스트
@@ -60,6 +63,7 @@ class KeywordResultActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         btn_play = findViewById<Button>(R.id.btn_play)
         btn_stop = findViewById<Button>(R.id.btn_stop)
         scrollView = findViewById<ScrollView>(R.id.scrollView)
+
         btn_play!!.isEnabled = false //재생 버튼 플래그 false로 초기화
         tts = TextToSpeech(this, this)
         btn_stop!!.setOnClickListener { onDestroy() } // 정지 버튼 클릭시 시나리오 구현
@@ -71,6 +75,7 @@ class KeywordResultActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     }
     @SuppressLint("CheckResult", "SuspiciousIndentation")
     fun KeywordCrawling(name: String) { //크롤링을 통해 기사제목, 기사링크 , 기사이미지 리스트 만들기
+
         val url =
             "https://search.naver.com/search.naver?where=news&ie=utf8&sm=nws_hty&query=$name&photo=1" //사진이 첨부된 뉴스 기사만 검색
 
@@ -147,6 +152,7 @@ class KeywordResultActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                     binding.resultListView
                         ?.setOnItemClickListener { adapterView, view, i, l ->
                             Toast.makeText(this, articleUrlList[i], Toast.LENGTH_SHORT).show()
+                            tts!!.stop()
                             Handler().postDelayed({
                                 showWebViewDialog(articleUrlList[i]) // 특정 클릭된 링크를 웹뷰로 보여주기 function
                                 super.onResume() // 결과 내용의 상태 죽지 않기 위해 유지
@@ -180,7 +186,7 @@ class KeywordResultActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     private fun speakOut(articleTitleList: MutableList<String>) {
 
 
-
+        scrollView!!.fullScroll(ScrollView.FOCUS_UP)
         for (i in 0..articleTitleList.size - 1) {
             if (i == 0) {
                 tts!!.speak("첫번째 뉴스", TextToSpeech.QUEUE_ADD,params,"첫번째 뉴스")
@@ -201,7 +207,12 @@ class KeywordResultActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
                     //scrollView!!.smoothScrollBy(0, 600);
 
+
+
                     tts!!.speak("${i+1} 번째 뉴스", TextToSpeech.QUEUE_ADD,params,"${i+1} 번째 뉴스")
+                Handler().postDelayed({
+                    scrollView!!.smoothScrollBy(0,100)
+                }, 30000) //대충 6번째 뉴스 발화 때 스크롤 시간 때려 맞춤
 
                 Handler().postDelayed({}, 500)
                     tts!!.speak(
@@ -235,6 +246,11 @@ class KeywordResultActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         val webView = WebView(this).apply {
             settings.useWideViewPort=true
             settings.setSupportZoom(true)
+            settings.builtInZoomControls = true
+            settings.displayZoomControls = false
+
+
+
 
             loadUrl(url)
             webViewClient = object : WebViewClient() {
@@ -246,12 +262,17 @@ class KeywordResultActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                 }
             }
         }
-        AlertDialog.Builder(this, R.style.ThemeOverlay_MaterialComponents_MaterialAlertDialog_Background)
+
+        val builderSetting = AlertDialog.Builder(this, R.style.ThemeOverlay_MaterialComponents_MaterialAlertDialog_Background)
+
             .setView(webView)
             .setNegativeButton("이전 화면으로 돌아가기") { dialog, _ ->
                 dialog.dismiss()
+
             }
 
             .show()
+        builderSetting.window?.setLayout(2200,1000)
+
     }
 }

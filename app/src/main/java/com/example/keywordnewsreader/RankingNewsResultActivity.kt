@@ -3,18 +3,24 @@ package com.example.keywordnewsreader
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.res.Configuration
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.speech.tts.TextToSpeech
+import android.speech.tts.TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID
 import android.util.Log
+import android.view.KeyEvent
+import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Button
 import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.ListView
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.example.keywordnewsreader.databinding.ActivityRankingnewsResultBinding
@@ -26,9 +32,7 @@ import org.jsoup.nodes.Document
 import java.util.Locale
 
 
-
-
-class RankingNewsResultActivity : AppCompatActivity(),TextToSpeech.OnInitListener {
+class RankingNewsResultActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
     private var tts: TextToSpeech? = null
     private var btn_back: ImageButton? = null
@@ -37,18 +41,23 @@ class RankingNewsResultActivity : AppCompatActivity(),TextToSpeech.OnInitListene
     private var resultList: ListView? = null
     private var scrollView: ScrollView? = null
     private val params = Bundle()
-    private var playState : String = "stop"
+    private var playState: String = "stop"
+    private var companyLogo: ImageView? = null
+
     var textResult: String = ""
     val articleTitleList: MutableList<String> = ArrayList() // 기사 제목 리스트
     val articleUrlList: MutableList<String> = ArrayList() // 기사 링크 리스트
     val articlePhotoUrlList: MutableList<String> = ArrayList() // 기사 이미지 리스트
     val binding by lazy { ActivityRankingnewsResultBinding.inflate(layoutInflater) }
 
+
+    @RequiresApi(Build.VERSION_CODES.R)
     override fun onCreate(savedInstanceState: Bundle?) {
 
         super.onCreate(savedInstanceState)
 
-        var selectedCompany: String? = intent.getStringExtra("selectedCompany") // 메인액티비티에서 받은 발화결과가 키워드가 됨.
+        var selectedCompany: String? =
+            intent.getStringExtra("selectedCompany") // 메인액티비티에서 받은 발화결과가 키워드가 됨.
         // 크롤링 시작
         if (selectedCompany != null) { //키워드 발화 작동의 경우
             GetTrendNewsResult(selectedCompany)
@@ -61,35 +70,46 @@ class RankingNewsResultActivity : AppCompatActivity(),TextToSpeech.OnInitListene
         btn_play = findViewById<Button>(R.id.btn_play)
         btn_stop = findViewById<Button>(R.id.btn_stop)
         scrollView = findViewById<ScrollView>(R.id.scrollView)
+        companyLogo = findViewById<ImageView>(R.id.companyLogo)
+
+
         btn_play!!.isEnabled = false //재생 버튼 플래그 false로 초기화
         tts = TextToSpeech(this, this)
         btn_stop!!.setOnClickListener { tts!!.stop() } // 정지 버튼 클릭시 시나리오 구현
         btn_back!!.setOnClickListener { // Back 버튼 클릭시 시나리오 구현 : 메인액티비티로 돌아가기
             tts!!.stop()
             val intent = Intent(this, MainActivity::class.java)
+
             startActivity(intent)
 
         }
     }
-    @SuppressLint("CheckResult", "SuspiciousIndentation")
-    fun GetTrendNewsResult(selectedCompany: String){
-        var url : String = ""
+
+    @RequiresApi(Build.VERSION_CODES.R)
+    @SuppressLint("CheckResult", "SuspiciousIndentation", "UseCompatLoadingForDrawables")
+    fun GetTrendNewsResult(selectedCompany: String) {
+        var url: String = ""
         println("선택된 언론사 : ${selectedCompany}")
-        if (selectedCompany =="연합뉴스"){
+        if (selectedCompany == "연합뉴스") {
+            binding.companyLogo.setImageResource(R.drawable.yeonhap)
             url = "https://media.naver.com/press/001"
-            getYeonhapResult(url,selectedCompany)
-        }
-        else if(selectedCompany =="조선일보"){
+            getYeonhapResult(url, selectedCompany)
+
+        } else if (selectedCompany == "조선일보") {
+            binding.companyLogo.setImageResource(R.drawable.chosun)
             url = "https://media.naver.com/press/023"
-            getChosunResult(url,selectedCompany)
-        }
-        else if(selectedCompany =="중앙일보"){
+            getChosunResult(url, selectedCompany)
+
+        } else if (selectedCompany == "중앙일보") {
+            binding.companyLogo.setImageResource(R.drawable.joongang)
             url = "https://media.naver.com/press/025"
-            getJoongAngResult(url,selectedCompany)
-        }
-        else if(selectedCompany =="동아일보"){
+            getJoongAngResult(url, selectedCompany)
+
+        } else if (selectedCompany == "동아일보") {
+            binding.companyLogo.setImageResource(R.drawable.dongah)
             url = "https://media.naver.com/press/020"
-            getDongAhResult(url,selectedCompany)
+            getDongAhResult(url, selectedCompany)
+
         }
 
     }
@@ -114,41 +134,24 @@ class RankingNewsResultActivity : AppCompatActivity(),TextToSpeech.OnInitListene
 
     private fun speakOut(articleTitleList: MutableList<String>) {
 
+        scrollView!!.fullScroll(ScrollView.FOCUS_UP)
+        for (i in 0..articleTitleList.size-1) {
 
 
-        for (i in 0..articleTitleList.size - 1) {
-            if (i == 0) {
+            Handler().postDelayed({}, 500)
 
-                Handler().postDelayed({}, 500)
-                tts!!.speak(
-
-                    articleTitleList.get(0),
-                    TextToSpeech.QUEUE_ADD,
-                    params,
-                    articleTitleList.get(0)
-                )
-
-
-            } else {
-
-                Handler().postDelayed({}, 500)
-                //scrollView!!.smoothScrollBy(0, 600);
-
-
-                Handler().postDelayed({}, 500)
-                tts!!.speak(
-                    articleTitleList.get(i),
-                    TextToSpeech.QUEUE_ADD,
-                    params,
-                    articleTitleList.get(i)
-                )
+            tts!!.speak(articleTitleList.get(i),TextToSpeech.QUEUE_ADD,params,"${i}")
+            Handler().postDelayed({
+                                  scrollView!!.smoothScrollBy(0,100)
+            }, 30000) //대충 6번째 뉴스 발화 때 스크롤 시간 때려 맞춤
 
 
 
-            }
         }
+
         Handler().postDelayed({}, 1000)
-        tts!!.speak("이상 뉴스 끝!!", TextToSpeech.QUEUE_ADD,params,"이상 뉴스 끝!!")
+        tts!!.speak("이상 실시간 랭킹 뉴스 끝!!", TextToSpeech.QUEUE_ADD, params, "이상 실시간 랭킹 뉴스 끝!!")
+
 
 
     }
@@ -162,12 +165,10 @@ class RankingNewsResultActivity : AppCompatActivity(),TextToSpeech.OnInitListene
         super.onDestroy()
     }
 
+    @RequiresApi(Build.VERSION_CODES.R)
     private fun showWebViewDialog(url: String) { //웹 뷰 띄우기 function
 
         val webView = WebView(this).apply {
-            settings.useWideViewPort=true
-            settings.setSupportZoom(true)
-
             loadUrl(url)
             webViewClient = object : WebViewClient() {
                 override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
@@ -176,29 +177,56 @@ class RankingNewsResultActivity : AppCompatActivity(),TextToSpeech.OnInitListene
                     }
                     return true
                 }
+
             }
         }
-        AlertDialog.Builder(this, R.style.ThemeOverlay_MaterialComponents_MaterialAlertDialog_Background)
+        webView.settings.javaScriptEnabled = true
+        webView.settings.setSupportZoom(true)
+        webView.settings.builtInZoomControls = true
+        webView.settings.displayZoomControls = true
+//            setInitialScale(1)
+        webView.settings.loadWithOverviewMode = true
+        webView.settings.useWideViewPort = true
+//            settings.setNeedInitialFocus(true)
+        webView.webViewClient = WebViewClient()
+        webView.webChromeClient = WebChromeClient()
+//        println("웹뷰우우우")
+//        println(webView.getScale())
+
+        val builderSetting = AlertDialog.Builder(
+            this,
+            R.style.ThemeOverlay_MaterialComponents_MaterialAlertDialog_Background
+        )
             .setView(webView)
             .setNegativeButton("이전 화면으로 돌아가기") { dialog, _ ->
                 dialog.dismiss()
             }
 
             .show()
+        builderSetting.window?.setLayout(2200, 1000)
+
+
     }
 
-    fun getYeonhapResult(url: String, selectedCompany: String){
+
+    @RequiresApi(Build.VERSION_CODES.R)
+    fun getYeonhapResult(url: String, selectedCompany: String) {
         Single.fromCallable { //싱글 클래스 스레드 사용
-            var rankingCount : Int = 0
+            var rankingCount: Int = 0
             var doc: Document? = null
             try {
                 doc = Jsoup.connect(url).get()
             } catch (e: Exception) {
                 e.printStackTrace()
             }
-            val element = doc!!.getElementsByAttributeValue("class", "ofra_list_tx_headline") // 기사 제목 태그 get
-            val element2 = doc!!.getElementsByAttributeValue("class", "ofra_list_item_link _es_pc_link")// 기사 url get
-            val element3 = doc!!.getElementsByAttributeValue("class", "ofra_list_img_inner")// 기사 이미지 get
+            val element =
+                doc!!.getElementsByAttributeValue("class", "ofra_list_tx_headline") // 기사 제목 태그 get
+            val element2 = doc!!.getElementsByAttributeValue(
+                "class",
+                "ofra_list_item_link _es_pc_link"
+            )// 기사 url get
+            val element3 =
+                doc!!.getElementsByAttributeValue("class", "ofra_list_img_inner")// 기사 이미지 get
             println("이미지 get 가능?")
             println(element3)
 
@@ -206,7 +234,12 @@ class RankingNewsResultActivity : AppCompatActivity(),TextToSpeech.OnInitListene
 
             for (elem1 in element) { // element 형식의 내용에서 특정 attribute를 추출하여 각 리스트들에 삽입 작업
                 ++rankingCount
-                articleTitleList.add(""+rankingCount+",     "+elem1.select("div").get(0).html())
+                articleTitleList.add(
+                    "" + rankingCount + ",     " + elem1.select("div").get(0).html()
+                )
+                if(rankingCount==10){
+                    break
+                }
             }
             for (elem2 in element2) {
                 articleUrlList.add(elem2.select("a").attr("href"))
@@ -215,9 +248,9 @@ class RankingNewsResultActivity : AppCompatActivity(),TextToSpeech.OnInitListene
                 articlePhotoUrlList.add(elem3.select("img").attr("data-src"))
 
             }
-                     println("이미지 검사")
+            println("이미지 검사")
             println(articlePhotoUrlList)
-           // btn_play!!.setOnClickListener { speakOut(articleTitleList) } // 재생 버튼 클릭시 시나리오 구현
+
         }
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
@@ -226,7 +259,7 @@ class RankingNewsResultActivity : AppCompatActivity(),TextToSpeech.OnInitListene
                 { text ->
                     val searchResultTextView = findViewById<TextView>(R.id.searchResultTextView)
                     searchResultTextView.setText(
-                        "▼ " +  "   ${selectedCompany} 실시간 랭킹 뉴스 검색 결과  ▼"
+                        "▼ " + "   ${selectedCompany} 실시간 랭킹 뉴스 검색 결과  ▼"
                     )
                     for (i in 0..articleTitleList.size - 1) { // tts를 하기 위해 리스트 내용들을 추합한 스트링을 저장
                         textResult += "${articleTitleList.get(i)}" + "\t\t\t"
@@ -260,6 +293,7 @@ class RankingNewsResultActivity : AppCompatActivity(),TextToSpeech.OnInitListene
                     binding.resultListView
                         ?.setOnItemClickListener { adapterView, view, i, l ->
                             Toast.makeText(this, articleUrlList[i], Toast.LENGTH_SHORT).show()
+                            tts!!.stop()
                             Handler().postDelayed({
                                 showWebViewDialog(articleUrlList[i]) // 특정 클릭된 링크를 웹뷰로 보여주기 function
                                 super.onResume() // 결과 내용의 상태 죽지 않기 위해 유지
@@ -270,24 +304,37 @@ class RankingNewsResultActivity : AppCompatActivity(),TextToSpeech.OnInitListene
                 { it.printStackTrace() }
             )
     }
-    fun getChosunResult(url: String, selectedCompany: String){
+
+    @SuppressLint("CheckResult")
+    @RequiresApi(Build.VERSION_CODES.R)
+    fun getChosunResult(url: String, selectedCompany: String) {
         Single.fromCallable { //싱글 클래스 스레드 사용
-            var rankingCount : Int = 0
+            var rankingCount: Int = 0
             var doc: Document? = null
             try {
                 doc = Jsoup.connect(url).get()
             } catch (e: Exception) {
                 e.printStackTrace()
             }
-            val element = doc!!.getElementsByAttributeValue("class", "ofra_list_tx_headline") // 기사 제목 태그 get
-            val element2 = doc!!.getElementsByAttributeValue("class", "ofra_list_item_link _es_pc_link")// 기사 url get
-            val element3 = doc!!.getElementsByAttributeValue("class", "ofra_list_img_inner")// 기사 이미지 get
+            val element =
+                doc!!.getElementsByAttributeValue("class", "ofra_list_tx_headline") // 기사 제목 태그 get
+            val element2 = doc!!.getElementsByAttributeValue(
+                "class",
+                "ofra_list_item_link _es_pc_link"
+            )// 기사 url get
+            val element3 =
+                doc!!.getElementsByAttributeValue("class", "ofra_list_img_inner")// 기사 이미지 get
 
 
 
             for (elem1 in element) { // element 형식의 내용에서 특정 attribute를 추출하여 각 리스트들에 삽입 작업
                 ++rankingCount
-                articleTitleList.add(""+rankingCount+",     "+elem1.select("div").get(0).html())
+                articleTitleList.add(
+                    "" + rankingCount + ",     " + elem1.select("div").get(0).html()
+                )
+                if(rankingCount==10){
+                    break
+                }
             }
             for (elem2 in element2) {
                 articleUrlList.add(elem2.select("a").attr("href"))
@@ -305,7 +352,7 @@ class RankingNewsResultActivity : AppCompatActivity(),TextToSpeech.OnInitListene
                 { text ->
                     val searchResultTextView = findViewById<TextView>(R.id.searchResultTextView)
                     searchResultTextView.setText(
-                        "▼ " +  "   ${selectedCompany} 실시간 랭킹 뉴스 검색 결과  ▼"
+                        "▼ " + "   ${selectedCompany} 실시간 랭킹 뉴스 검색 결과  ▼"
                     )
                     for (i in 0..articleTitleList.size - 1) { // tts를 하기 위해 리스트 내용들을 추합한 스트링을 저장
                         textResult += "${articleTitleList.get(i)}" + "\t\t\t"
@@ -334,6 +381,7 @@ class RankingNewsResultActivity : AppCompatActivity(),TextToSpeech.OnInitListene
                         CustomAdapter(this, TotalList) // 사진,타이틀이 담긴 변수를 resultListView에 띄우기 위한 작업
                     binding.resultListView
                         ?.setOnItemClickListener { adapterView, view, i, l ->
+
                             Toast.makeText(this, articleUrlList[i], Toast.LENGTH_SHORT).show()
                             Handler().postDelayed({
                                 showWebViewDialog(articleUrlList[i]) // 특정 클릭된 링크를 웹뷰로 보여주기 function
@@ -345,24 +393,36 @@ class RankingNewsResultActivity : AppCompatActivity(),TextToSpeech.OnInitListene
                 { it.printStackTrace() }
             )
     }
-    fun getJoongAngResult(url: String, selectedCompany: String){
+
+    @RequiresApi(Build.VERSION_CODES.R)
+    fun getJoongAngResult(url: String, selectedCompany: String) {
         Single.fromCallable { //싱글 클래스 스레드 사용
-            var rankingCount : Int = 0
+            var rankingCount: Int = 0
             var doc: Document? = null
             try {
                 doc = Jsoup.connect(url).get()
             } catch (e: Exception) {
                 e.printStackTrace()
             }
-            val element = doc!!.getElementsByAttributeValue("class", "ofra_list_tx_headline") // 기사 제목 태그 get
-            val element2 = doc!!.getElementsByAttributeValue("class", "ofra_list_item_link _es_pc_link")// 기사 url get
-            val element3 = doc!!.getElementsByAttributeValue("class", "ofra_list_img_inner")// 기사 이미지 get
+            val element =
+                doc!!.getElementsByAttributeValue("class", "ofra_list_tx_headline") // 기사 제목 태그 get
+            val element2 = doc!!.getElementsByAttributeValue(
+                "class",
+                "ofra_list_item_link _es_pc_link"
+            )// 기사 url get
+            val element3 =
+                doc!!.getElementsByAttributeValue("class", "ofra_list_img_inner")// 기사 이미지 get
 
 
 
             for (elem1 in element) { // element 형식의 내용에서 특정 attribute를 추출하여 각 리스트들에 삽입 작업
                 ++rankingCount
-                articleTitleList.add(""+rankingCount+",     "+elem1.select("div").get(0).html())
+                articleTitleList.add(
+                    "" + rankingCount + ",     " + elem1.select("div").get(0).html()
+                )
+                if(rankingCount==10){
+                    break
+                }
             }
             for (elem2 in element2) {
                 articleUrlList.add(elem2.select("a").attr("href"))
@@ -379,7 +439,7 @@ class RankingNewsResultActivity : AppCompatActivity(),TextToSpeech.OnInitListene
                 { text ->
                     val searchResultTextView = findViewById<TextView>(R.id.searchResultTextView)
                     searchResultTextView.setText(
-                        "▼ " +  "   ${selectedCompany} 실시간 랭킹 뉴스 검색 결과  ▼"
+                        "▼ " + "   ${selectedCompany} 실시간 랭킹 뉴스 검색 결과  ▼"
                     )
                     for (i in 0..articleTitleList.size - 1) { // tts를 하기 위해 리스트 내용들을 추합한 스트링을 저장
                         textResult += "${articleTitleList.get(i)}" + "\t\t\t"
@@ -419,24 +479,36 @@ class RankingNewsResultActivity : AppCompatActivity(),TextToSpeech.OnInitListene
                 { it.printStackTrace() }
             )
     }
-    fun getDongAhResult(url: String, selectedCompany: String){
+
+    @RequiresApi(Build.VERSION_CODES.R)
+    fun getDongAhResult(url: String, selectedCompany: String) {
         Single.fromCallable { //싱글 클래스 스레드 사용
-            var rankingCount : Int = 0
+            var rankingCount: Int = 0
             var doc: Document? = null
             try {
                 doc = Jsoup.connect(url).get()
             } catch (e: Exception) {
                 e.printStackTrace()
             }
-            val element = doc!!.getElementsByAttributeValue("class", "ofra_list_tx_headline") // 기사 제목 태그 get
-            val element2 = doc!!.getElementsByAttributeValue("class", "ofra_list_item_link _es_pc_link")// 기사 url get
-            val element3 = doc!!.getElementsByAttributeValue("class", "ofra_list_img_inner")// 기사 이미지 get
+            val element =
+                doc!!.getElementsByAttributeValue("class", "ofra_list_tx_headline") // 기사 제목 태그 get
+            val element2 = doc!!.getElementsByAttributeValue(
+                "class",
+                "ofra_list_item_link _es_pc_link"
+            )// 기사 url get
+            val element3 =
+                doc!!.getElementsByAttributeValue("class", "ofra_list_img_inner")// 기사 이미지 get
 
 
 
             for (elem1 in element) { // element 형식의 내용에서 특정 attribute를 추출하여 각 리스트들에 삽입 작업
                 ++rankingCount
-                articleTitleList.add(""+rankingCount+",     "+elem1.select("div").get(0).html())
+                articleTitleList.add(
+                    "" + rankingCount + ",     " + elem1.select("div").get(0).html()
+                )
+                if(rankingCount==10){
+                    break
+                }
             }
             for (elem2 in element2) {
                 articleUrlList.add(elem2.select("a").attr("href"))
@@ -453,7 +525,7 @@ class RankingNewsResultActivity : AppCompatActivity(),TextToSpeech.OnInitListene
                 { text ->
                     val searchResultTextView = findViewById<TextView>(R.id.searchResultTextView)
                     searchResultTextView.setText(
-                        "▼ " +  "   ${selectedCompany} 실시간 랭킹 뉴스 검색 결과  ▼"
+                        "▼ " + "   ${selectedCompany} 실시간 랭킹 뉴스 검색 결과  ▼"
                     )
                     for (i in 0..articleTitleList.size - 1) { // tts를 하기 위해 리스트 내용들을 추합한 스트링을 저장
                         textResult += "${articleTitleList.get(i)}" + "\t\t\t"
